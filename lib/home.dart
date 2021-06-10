@@ -1,3 +1,8 @@
+import 'dart:convert';
+
+import 'package:demo/DataModal.dart';
+
+import 'package:http/http.dart' as http;
 import 'package:demo/imports.dart';
 
 class Home extends StatefulWidget {
@@ -6,166 +11,152 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  String url = 'http://www.json-generator.com/api/json/get/bVPwlLYdRu?indent=2';
+  List listMeniItems;
+
+  Color appBarColor =  Color(0xFFEEEEEE);
+  DataModal _dataModal = new DataModal();
+  var menuname;
+  var description;
+
+  Future getMenuName() async {
+    final response = await http.get(Uri.parse(url));
+
+    _dataModal = dataModalFromJson(response.body);
+    menuname = _dataModal.menuName;
+
+    return menuname;
+  }
+
+  Future<List> getItems() async {
+    final response = await http.get(Uri.parse(url));
+    Map<String, dynamic> map = json.decode(response.body);
+    listMeniItems = map['menuitems'];
+
+    return listMeniItems.map((data) => Menuitem.fromJson(data)).toList();
+  }
+
+  Future getDescription() async {
+    final response = await http.get(Uri.parse(url));
+    Map<String, dynamic> map = json.decode(response.body);
+
+    description = map['menu_details'];
+
+    return description;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: HexColor("#ffffff"),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0.0,
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(6.0),
+      backgroundColor: Color(0xFFEEEEEE),
+        appBar: PreferredSize(
+            child: FutureBuilder(
+              future: getMenuName(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.done) {
+                  var data = snapshot.data;
+                  return AppBar(
+                   backgroundColor: Colors.transparent,
+                    elevation: 0.0,
+                    title: Text("$data".toUpperCase(),style: TextStyle(color: Colors.black),),
+                  );
+                } else if (snapshot.connectionState ==
+                    ConnectionState.waiting) {
+                  return AppBar(
+                    elevation: 0.0,
+                   backgroundColor: Colors.transparent,
+                    title: Text(""),
+                  );
+                } else {
+                  return AppBar(
+                    elevation: 0.0,
+                   backgroundColor: Colors.transparent,
+                    title: Text(""),
+                  );
+                }
+              },
+            ),
+            preferredSize: Size(50, 50)),
+        body: SingleChildScrollView(
           child: Container(
+            height: MediaQuery.of(context).size.height,
             child: Column(
+              mainAxisSize: MainAxisSize.max,
               children: [
-                Image.asset("assets/google_finance.png",fit: BoxFit.cover,height: 100,),
-                SizedBox(height: 50,),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.lock,
-                      size: 15,
-                      color: HexColor(
-                        "#696969",
-                      ),
-                    ),
-                    SizedBox(width: 5,),
-                    Text(
-                      "Procced with your Login",
-                      style: TextStyle(
-                        color: HexColor(
-                          "#696969",
-                        ),
-                      ),
-                    ),
-                  ],
+                Divider(
+                  color: Colors.teal,
                 ),
-                 SizedBox(height: 10,),
-                CustomTextFiled(
-                  hintText: "User Name",
+                Container(
+                  padding: EdgeInsets.all(8.0),
+                  child: FutureBuilder(
+                      future: getDescription(),
+                      builder: (context, snapshot) {
+                        var data = snapshot.data;
+                        if (snapshot.hasData) {
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text("Description",
+                                  style: TextStyle(fontSize: 20)),
+                              Text(data['description'],
+                                  style: TextStyle(fontSize: 20)),
+                            ],
+                          );
+                        } else if (snapshot.hasError) {
+                          return Text(snapshot.error);
+                        } else {
+                          return Text("");
+                        }
+                      }),
                 ),
-                CustomTextFiled(
-                  hintText: "Password",
+                Divider(
+                  color: Colors.teal,
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(right: 25),
-                  child: Align(
-                    alignment: Alignment.bottomRight,
-                    child: Text("Forgot Password?"),
+                Expanded(
+                  child: FutureBuilder<List>(
+                    future: getItems(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        List data = snapshot.data;
+                        return ListView.builder(
+                            itemCount: data.length,
+                            itemBuilder: (context, index) {
+                              return Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Container(
+                                  height: 80,
+                                  decoration: BoxDecoration(
+                                      color: HexColor("#ffffff"),
+                                      borderRadius: BorderRadius.circular(10)),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.all(12.0),
+                                        child: Text(
+                                          "${data[index].name}".toUpperCase(),
+                                          style: TextStyle(fontSize: 20),
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.all(12.0),
+                                        child: Text(data[index].price,
+                                            style: TextStyle(fontSize: 20)),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            });
+                      }
+                      return Container();
+                    },
                   ),
                 ),
-                SizedBox(
-                  height: 10,
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Container(
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(15),
-                        color: HexColor("#6457a6")),
-                    width: 250,
-                    height: 40,
-                    alignment: Alignment.center,
-                    child: Text(
-                      "Login".toUpperCase(),
-                      style: TextStyle(color: Colors.white, fontSize: 18),
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  height: 30,
-                ),
-                Text("────────────── OR ──────────────",
-                    style: TextStyle(color: HexColor("#686868"))),
-                SizedBox(
-                  height:10,
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        width: 180,
-                        height: 50,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                            border: Border.all(color: HexColor("#696969")),
-                            borderRadius: BorderRadius.circular(15)),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            Image.asset(
-                              "assets/google_logo.png",
-                              fit: BoxFit.cover,
-                              width: 30,
-                            ),
-                            Text("Google Sign in"),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        width: 180,
-                        height: 50,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                            border: Border.all(),
-                            borderRadius: BorderRadius.circular(15)),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            Image.asset(
-                              "assets/facebook_logos.png",
-                              fit: BoxFit.cover,
-                              width: 40,
-                            ),
-                            Text("Facebook Sign in"),
-                          ],
-                        ),
-                      )
-                    ],
-                  ),
-                ),
-                SizedBox(
-                  height: 30,
-                ),
-                RichText(
-                    text: TextSpan(children: <TextSpan>[
-                  TextSpan(
-                      text: "Dont have Account Yet?  ",
-                      style:
-                          TextStyle(color: HexColor("#696969"), fontSize: 20)),
-                  TextSpan(
-                      text: "Register",
-                      style: TextStyle(
-                          color: HexColor("#696969"),
-                          fontSize: 20,
-                          fontWeight: FontWeight.w500))
-                ])),
-                SizedBox(
-                  height: 80,
-                ),
-                Text(
-                  "©company Name. All Rights Reserved",
-                  style: TextStyle(color: Colors.teal, fontSize: 14),
-                ),
-                Text(
-                  "Terms of Use",
-                  style: TextStyle(
-                      decoration: TextDecoration.underline,
-                      color: HexColor(
-                        "#696969",
-                      ),
-                      fontWeight: FontWeight.w500),
-                )
               ],
             ),
           ),
-        ),
-      ),
-    );
+        ));
   }
 }
