@@ -1,3 +1,4 @@
+import 'package:demo/HomeScreen.dart';
 import 'package:demo/imports.dart';
 void main() {
   runApp(MyApp());
@@ -12,7 +13,7 @@ class MyApp extends StatelessWidget {
         brightness: Brightness.light,
         primarySwatch: Colors.blue,
       ),
-      home: Home(),
+      home: HomeScreen(),
     );
   }
 }
