@@ -77,11 +77,13 @@ class _HomeScreenState extends State<HomeScreen> {
                           style: TextStyle(fontSize: 20)),
                     ],
                   )),
+              Divider(),
               Expanded(
                   child: Container(
                 child: ListView.builder(
-                    itemCount:
-                        (listMeniItems.length == null) ? 0 : listMeniItems.length,
+                    itemCount: (listMeniItems.length == null)
+                        ? 0
+                        : listMeniItems.length,
                     itemBuilder: (context, index) {
                       return (listMeniItems == null)
                           ? Container()
